@@ -427,6 +427,12 @@
         <button type="button" data-src="demo">Demo</button>
       </div>
 
+      <h5>Modelo IA (análisis intrínseco)</h5>
+      <div class="radios" id="modelRadios">
+        <button type="button" data-model="claude-haiku-4-5" class="on">Haiku · test</button>
+        <button type="button" data-model="claude-opus-4-8">Opus · calidad</button>
+      </div>
+
       <h5>Clave API de Claude (análisis intrínseco)</h5>
       <div class="keyrow">
         <input id="claudeKey" type="password" placeholder="sk-ant-…" autocomplete="off">
@@ -483,6 +489,7 @@ let selectedClasses = [];             // hasta 3 clases
 let vigencia = "";                    // "" | "vig" | "novig"
 let aiEnabled = true;
 let dataSource = localStorage.getItem("mk_source") || "live";  // auto | live | demo
+let aiModel = localStorage.getItem("mk_model") || "claude-haiku-4-5";  // Haiku por defecto (test)
 let usingDemo = false;                // resuelto en runtime
 let lastQuery = "";
 
@@ -661,9 +668,12 @@ async function claudeIntrinsic(q){
       "anthropic-dangerous-direct-browser-access":"true"
     },
     body: JSON.stringify({
-      model:"claude-opus-4-8",
+      model: aiModel,
       max_tokens: 2048,
-      output_config:{ effort:"low", format:{ type:"json_schema", schema: INTR_SCHEMA } },
+      // `effort` solo lo soportan Opus/Sonnet 5; Haiku 4.5 devuelve 400 si se envía.
+      output_config: aiModel.includes("opus")
+        ? { effort:"low", format:{ type:"json_schema", schema: INTR_SCHEMA } }
+        : { format:{ type:"json_schema", schema: INTR_SCHEMA } },
       system:"Eres un experto en propiedad industrial chilena (INAPI, Ley 19.039). Evalúas la registrabilidad intrínseca de signos marcarios: distintividad, causales absolutas de irregistrabilidad y clases de Niza probables. Responde en español, conciso y práctico.",
       messages:[{role:"user", content:`Analiza intrínsecamente el signo marcario: "${q}". No evalúes anterioridades (eso lo hace la búsqueda vectorial después), solo el signo en sí.`}]
     })
@@ -991,6 +1001,7 @@ function openModal(){
   $("#overlay").classList.add("open");
   $("#claudeKey").value = localStorage.getItem("mk_claude_key")||"";
   [...$("#srcRadios").children].forEach(b=>b.classList.toggle("on", b.dataset.src===dataSource));
+  [...$("#modelRadios").children].forEach(b=>b.classList.toggle("on", b.dataset.model===aiModel));
 }
 $("#gearBtn").addEventListener("click", openModal);
 $("#closeModal").addEventListener("click",()=>$("#overlay").classList.remove("open"));
@@ -1001,6 +1012,13 @@ $("#srcRadios").addEventListener("click",e=>{
   localStorage.setItem("mk_source", dataSource);
   [...$("#srcRadios").children].forEach(x=>x.classList.toggle("on", x===b));
   if(lastQuery) runSearch(lastQuery);
+});
+$("#modelRadios").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  aiModel=b.dataset.model;
+  localStorage.setItem("mk_model", aiModel);
+  [...$("#modelRadios").children].forEach(x=>x.classList.toggle("on", x===b));
+  if(lastQuery && aiEnabled) runIntrinsic(lastQuery);
 });
 $("#saveKey").addEventListener("click",()=>{
   const v=$("#claudeKey").value.trim();
