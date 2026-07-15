@@ -553,12 +553,18 @@ async function searchOne(q, niza){
   }
 }
 
-/* fusiona resultados de varias clases: dedupe por identidad y conserva el mayor score */
+/* fusiona resultados de varias clases: dedupe por identidad y conserva el mayor score.
+   La identidad real es el N° de solicitud (único por expediente). El respaldo incluye
+   las clases: dos solicitudes del mismo nombre presentadas el mismo día y aún sin
+   N° de registro (caso típico: misma marca pedida en varias clases a la vez) NO
+   deben colapsar en una sola tarjeta. */
 function mergeResults(lists){
   const map = new Map();
   for(const list of lists){
     for(const r of list){
-      const key = `${r.brand_name}|${r.registration_number??""}|${r.filing_date??""}`;
+      const key = r.application_number != null
+        ? `app:${r.application_number}`
+        : `${r.brand_name}|${r.registration_number??""}|${r.filing_date??""}|${(r.niza_classes||[]).join(",")}`;
       const prev = map.get(key);
       if(!prev || r.score > prev.score) map.set(key, r);
     }
