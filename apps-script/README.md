@@ -3,7 +3,7 @@
 El buscador guarda en una planilla de Google:
 
 - **Leads** — nombre y correo que el visitante deja (opcional) tras su primera búsqueda.
-- **Busquedas** — cada búsqueda: consulta, clases de Niza, filtro de vigencia, si usó IA,
+- **Busquedas** — cada búsqueda: consulta, clases de Niza, filtro de vigencia,
   si respondió la API o el modo demo, cuántos resultados hubo y la coincidencia más alta.
   Si el visitante ya dejó sus datos, la fila queda asociada a su correo.
 - **Eventos** — otros eventos (por ejemplo, cuando alguien cierra el formulario sin dejar datos).

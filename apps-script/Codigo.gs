@@ -12,7 +12,7 @@ var SHEET_ID = '146IMXHXVWPA2EHgF6nanorNG__7R_eiCseZdHnem4mk';
 
 var HEADERS = {
   'Leads': ['Fecha', 'Nombre', 'Correo', 'Primera búsqueda', 'Visitante', 'Página', 'Referente', 'Navegador'],
-  'Busquedas': ['Fecha', 'Consulta', 'Clases', 'Vigencia', 'IA', 'Fuente', 'Resultados',
+  'Busquedas': ['Fecha', 'Consulta', 'Clases', 'Vigencia', 'Fuente', 'Resultados',
                 'Top coincidencia', 'Top %', 'Correo', 'Nombre', 'Visitante', 'Página', 'Referente', 'Navegador'],
   'Eventos': ['Fecha', 'Tipo', 'Correo', 'Visitante', 'Página', 'Referente', 'Navegador']
 };
@@ -26,7 +26,7 @@ function doPost(e) {
       append_('Leads', [now, d.nombre || '', d.email || '', d.primera_busqueda || '',
                         d.visitor_id || '', d.page || '', d.ref || '', d.ua || '']);
     } else if (d.type === 'search') {
-      append_('Busquedas', [now, d.consulta || '', d.clases || '', d.vigencia || '', d.ai || '',
+      append_('Busquedas', [now, d.consulta || '', d.clases || '', d.vigencia || '',
                             d.fuente || '', d.n_resultados, d.top_marca || '', d.top_score,
                             d.email || '', d.nombre || '', d.visitor_id || '',
                             d.page || '', d.ref || '', d.ua || '']);
