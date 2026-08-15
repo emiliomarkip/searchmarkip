@@ -310,6 +310,30 @@
   .modal .close{margin-top:22px; width:100%; border:none; background:var(--nm); color:var(--ink); font-weight:700; border-radius:15px; padding:13px; cursor:pointer; box-shadow:var(--raise-sm)}
   .modal .close:active{box-shadow:var(--press-sm)}
 
+  /* ---- Captura de contacto (lead) ---- */
+  .modal.leadm{position:relative; max-width:430px}
+  .leadm .x{position:absolute; top:16px; right:16px; width:32px; height:32px; border:none; border-radius:50%;
+    background:var(--nm); color:var(--faint); font-size:14px; cursor:pointer; box-shadow:var(--raise-sm); line-height:1}
+  .leadm .x:active{box-shadow:var(--press-sm)}
+  .leadm .badge{display:inline-flex; align-items:center; gap:7px; font-size:11.5px; font-weight:800;
+    text-transform:uppercase; letter-spacing:.05em; color:var(--accent-d); background:var(--nm);
+    border-radius:20px; padding:7px 13px; box-shadow:var(--press-sm); margin-bottom:14px}
+  .leadfields{display:flex; flex-direction:column; gap:11px}
+  .leadfields input{border:none; border-radius:14px; padding:14px 16px; font-family:inherit; font-size:14px;
+    color:var(--ink); background:var(--nm); box-shadow:var(--press); outline:none}
+  .leadfields input:focus{box-shadow:var(--press), var(--focus)}
+  .leaderr{margin-top:10px; font-size:12.5px; font-weight:700; color:var(--hi)}
+  .leadsend{margin-top:16px; width:100%; border:none; background:var(--accent-grad); color:#fff; font-weight:800;
+    font-size:14.5px; border-radius:15px; padding:14px; cursor:pointer; box-shadow:var(--raise-accent)}
+  .leadsend:active{box-shadow:var(--press-sm)}
+  .leadsend[disabled]{opacity:.7; cursor:default}
+  .leadm .close{margin-top:10px; font-size:13.5px; color:var(--muted); box-shadow:none}
+  .leadm .close:hover{color:var(--ink)}
+  .leadnote{margin-top:16px; font-size:11.5px; color:var(--faint); line-height:1.5; text-align:center}
+  .leadok{text-align:center; padding:14px 0 4px}
+  .leadok .tick{width:52px; height:52px; margin:0 auto 14px; border-radius:50%; display:grid; place-items:center;
+    background:var(--accent-grad); color:#fff; box-shadow:var(--raise-accent); font-size:24px}
+
   @media (max-width:640px){
     .hero{padding-top:40px} .hero h1{font-size:31px}
     .card-main{grid-template-columns:1fr auto}
@@ -444,6 +468,37 @@
     </div>
   </div>
 
+  <!-- Captura de contacto: se muestra una sola vez, tras la primera búsqueda -->
+  <div class="overlay" id="leadOverlay">
+    <div class="modal leadm" role="dialog" aria-modal="true" aria-labelledby="leadTitle">
+      <button class="x" id="leadClose" type="button" aria-label="Cerrar">✕</button>
+      <div id="leadForm">
+        <span class="badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+          Informe de tu marca
+        </span>
+        <h3 id="leadTitle">¿Te enviamos el análisis completo?</h3>
+        <p class="sub">Déjanos tu nombre y correo y un especialista de Markip revisa la registrabilidad de <b id="leadQuery">tu marca</b> y te escribe. Es opcional: puedes seguir buscando sin dejar tus datos.</p>
+        <div class="leadfields">
+          <input id="leadName" type="text" placeholder="Nombre" autocomplete="name" aria-label="Nombre">
+          <input id="leadEmail" type="email" placeholder="Correo electrónico" autocomplete="email" aria-label="Correo electrónico">
+        </div>
+        <div class="leaderr" id="leadErr" hidden></div>
+        <button class="leadsend" id="leadSend" type="button">Enviar mis datos</button>
+        <button class="close" id="leadSkip" type="button">Ahora no, seguir buscando</button>
+        <div class="leadnote">Usamos tus datos solo para contactarte sobre tu marca. No los compartimos con terceros.</div>
+      </div>
+      <div id="leadThanks" hidden>
+        <div class="leadok">
+          <div class="tick">✓</div>
+          <h3>¡Gracias!</h3>
+          <p class="sub">Te contactaremos al correo que nos dejaste. Sigue explorando el buscador.</p>
+        </div>
+        <button class="leadsend" id="leadDone" type="button">Seguir buscando</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 "use strict";
 /* ================================================================
@@ -492,6 +547,80 @@ let dataSource = localStorage.getItem("mk_source") || "live";  // auto | live | 
 let aiModel = localStorage.getItem("mk_model") || "claude-haiku-4-5";  // Haiku por defecto (test)
 let usingDemo = false;                // resuelto en runtime
 let lastQuery = "";
+
+/* ================================================================
+   REGISTRO: leads + búsquedas → Google Sheet (Apps Script Web App)
+   Pega abajo la URL /exec del Web App (ver apps-script/README.md).
+   Si queda vacía, el buscador funciona igual: no se registra nada.
+   ================================================================ */
+const TRACK_URL = "";
+
+const LEAD_KEY = "mk_lead";        // datos del contacto (si los dejó)
+const LEAD_ASKED = "mk_lead_asked";// ya se le preguntó (aunque haya dicho que no)
+const VID_KEY = "mk_vid";          // id anónimo del visitante
+
+function visitorId(){
+  let v = localStorage.getItem(VID_KEY);
+  if(!v){
+    v = (crypto.randomUUID ? crypto.randomUUID()
+         : Date.now().toString(36) + Math.random().toString(36).slice(2,10));
+    localStorage.setItem(VID_KEY, v);
+  }
+  return v;
+}
+function leadData(){
+  try{ return JSON.parse(localStorage.getItem(LEAD_KEY) || "null"); }catch(e){ return null; }
+}
+
+/* POST "simple" (text/plain) para no gatillar preflight CORS, que Apps Script
+   no responde. Nunca bloquea ni rompe la UI: los errores se ignoran. */
+function track(type, data){
+  if(!TRACK_URL) return Promise.resolve(false);
+  const lead = leadData() || {};
+  const body = JSON.stringify(Object.assign({
+    type,
+    visitor_id: visitorId(),
+    ts: new Date().toISOString(),
+    email: lead.email || "",
+    nombre: lead.nombre || "",
+    page: location.href,
+    ref: document.referrer || "",
+    ua: navigator.userAgent
+  }, data));
+  return fetch(TRACK_URL, {
+    method: "POST",
+    headers: {"Content-Type": "text/plain;charset=utf-8"},
+    body,
+    keepalive: true
+  }).then(()=>true).catch(()=>false);
+}
+
+function trackSearch(q, list){
+  const top = list && list[0];
+  track("search", {
+    consulta: q,
+    clases: selectedClasses.join(", "),
+    vigencia: vigencia==="vig" ? "Vigentes" : vigencia==="novig" ? "No vigentes" : "Todas",
+    ai: aiEnabled ? "sí" : "no",
+    fuente: usingDemo ? "demo" : "api",
+    n_resultados: list ? list.length : 0,
+    top_marca: top ? (top.brand_name || "") : "",
+    top_score: top ? pct(top.score) : ""
+  });
+}
+
+/* ---------- Modal de contacto (una sola vez, tras la 1ª búsqueda) ---------- */
+function askLead(q){
+  if(localStorage.getItem(LEAD_ASKED) || leadData()) return;
+  localStorage.setItem(LEAD_ASKED, "1");        // no volver a insistir
+  setTimeout(()=>{
+    if($("#overlay").classList.contains("open")) return;   // no pisar Configuración
+    $("#leadQuery").textContent = q ? `“${q}”` : "tu marca";
+    $("#leadOverlay").classList.add("open");
+    setTimeout(()=>$("#leadName").focus(), 120);
+  }, 900);
+}
+function closeLead(){ $("#leadOverlay").classList.remove("open"); }
 
 /* ================================================================
    DATASET DEMO — datos de EJEMPLO (no reales) con el payload completo
@@ -915,10 +1044,13 @@ async function runSearch(qArg){
     let merged = mergeResults(lists);
     merged = applyVigencia(merged).slice(0,20);
     render(merged, q);
+    trackSearch(q, merged);
   }catch(e){
     showError();
+    trackSearch(q, null);
   }finally{
     $("#goBtn").disabled=false;
+    askLead(q);
   }
 }
 
@@ -1028,6 +1160,41 @@ $("#saveKey").addEventListener("click",()=>{
   setTimeout(()=>$("#saveKey").textContent="Guardar",1500);
   if(lastQuery && aiEnabled) runIntrinsic(lastQuery);
 });
+
+/* captura de contacto */
+$("#leadClose").addEventListener("click",()=>{ track("lead_skip", {}); closeLead(); });
+$("#leadSkip").addEventListener("click",()=>{ track("lead_skip", {}); closeLead(); });
+$("#leadDone").addEventListener("click", closeLead);
+$("#leadOverlay").addEventListener("click",e=>{ if(e.target.id==="leadOverlay") closeLead(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeLead(); });
+
+$("#leadSend").addEventListener("click", async ()=>{
+  const nombre = $("#leadName").value.trim();
+  const email  = $("#leadEmail").value.trim();
+  const err    = $("#leadErr");
+  const ok     = /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email);
+  if(!nombre || !ok){
+    err.textContent = !nombre ? "Escribe tu nombre para continuar."
+                              : "Revisa el correo: no parece válido.";
+    err.hidden = false;
+    (!nombre ? $("#leadName") : $("#leadEmail")).focus();
+    return;
+  }
+  err.hidden = true;
+  const btn = $("#leadSend");
+  btn.disabled = true; btn.textContent = "Enviando…";
+
+  localStorage.setItem(LEAD_KEY, JSON.stringify({nombre, email}));
+  await track("lead", {nombre, email, primera_busqueda: lastQuery});
+
+  btn.disabled = false; btn.textContent = "Enviar mis datos";
+  $("#leadForm").hidden = true;
+  $("#leadThanks").hidden = false;
+  setTimeout(closeLead, 2600);
+});
+[$("#leadName"), $("#leadEmail")].forEach(i=>i.addEventListener("keydown",e=>{
+  if(e.key==="Enter") $("#leadSend").click();
+}));
 
 /* búsqueda */
 $("#goBtn").addEventListener("click",()=>runSearch());
