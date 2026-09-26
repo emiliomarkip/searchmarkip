@@ -23,12 +23,12 @@
 | Markip Chile | MARKIT · MARKUP · MERKIP | 0.64 Medio (12°-14°) | 0.78 Alto (8°-10°) | colisión real del elemento distintivo |
 | Markip Chile | MARKIP SPA | 0.68 Medio | 0.98 Alto | mismo núcleo; "SpA" no pesa |
 | Markip Chile | MARQUIP | 0.67 Medio | 0.93 Alto | el núcleo suena igual |
-| Caro Molina | SOYCARO MOLINA | 0.92 (5°) | 0.95 Alto (5°) | contiene íntegro el núcleo (ver decisión 1) |
-| Caro Molina | MOLINA CARO | 0.63 Medio (15°) | 0.98 Alto (3°) | mismos elementos en otro orden |
+| Caro Molina | SOYCARO MOLINA | 0.92 (5°) | 0.99 Alto (2°) | contiene íntegra la consulta; solo bajo la idéntica |
+| Caro Molina | MOLINA CARO | 0.63 Medio (15°) | 0.97 Alto (4°) | mismos elementos en otro orden |
 | Caro Molina | MOLINA (sola) | 0.83 Alto | 0.68 Medio | solo un apellido en común |
 | Caro Molina | CAROLINA | 0.91 Alto (7°) | 0.77 Alto (8°) | fusión de ambos; queda bajo CARLA MOLINA |
 
-En total, sobre 8 consultas y 65 pares (incluyendo casos de una palabra como Skyline, Kukamonga, Sol, Entel, para verificar que no empeoran): hoy 29 de 65 filas están en el orden esperado; con v2, 65 de 65, y ninguna fila empeora. Ojo: el "orden esperado" lo definimos nosotros con criterio legal; falta validarlo con un golden set (sección 7).
+En total, sobre 8 consultas y 65 pares (incluyendo casos de una palabra como Skyline, Kukamonga, Sol, Entel, para verificar que no empeoran): hoy 27 de 65 filas están en el orden esperado; con v2, 65 de 65, y ninguna fila empeora. Ojo: el "orden esperado" lo definimos nosotros con criterio legal; falta validarlo con un golden set (sección 7).
 
 **Plan con lo que hay** (sin cambiar de infraestructura ni tocar el esquema de Qdrant hasta la fase 4, que es condicional):
 
@@ -40,11 +40,11 @@ En total, sobre 8 consultas y 65 pares (incluyendo casos de una palabra como Sky
 | 3 | 50 % de visitantes con v2, recalibrar umbrales con el golden set, cambiar el default | 2 semanas de tráfico | confianza medida, no intuida |
 | 4 | Solo si el golden set lo exige: clave fonética por token como payload nuevo en Qdrant (migración por lotes sin re-embeddear) | condicional | distintivos cortos pegados a otra palabra |
 
-**Tres decisiones que son tuyas** (detalle en la sección 8):
+**Decisiones tomadas por el fundador (2026-09-26):**
 
-1. **¿SOYCARO MOLINA primera?** Tu enunciado la pone primera. La doctrina pone al mismo nivel o por encima a las que tienen *los mismos elementos* (MOLINA CARO, CARO Y MOLINA) o *suenan idéntico* (KARO MOLINA). La propuesta la deja 5ª, primera entre todas las demás, con 95 %. Si prefieres contención primero, es un solo parámetro (`PISO["contiene_nucleo"]` de 0.88 a 0.96).
-2. **Geográficos que son marca** (PATAGONIA, LOS ANDES): con peso geográfico caen a Medio. Recomendación: lista geográfica solo con términos chilenos y países, y una línea de excepción por marca notoria en el léxico.
-3. **LLM online sí o no.** Recomendación: sí, pero acotado (solo tokens desconocidos, caché, tope diario, fallback) y con ablación medida; el valor legal está en el léxico curado, que es lo que tú controlas desde un CSV en GitHub.
+1. **Contener la consulta completa va primero.** Una marca que contiene íntegra la consulta (SOYCARO MOLINA) queda por encima de las que suenan igual (KARO MOLINA) o reordenan los mismos elementos (MOLINA CARO). Se agregó la regla `contiene_consulta` (piso 0.97) como la más fuerte después de la idéntica, y se bajaron `fonetica_identica` a 0.95 y `mismo_nucleo` a 0.94. Ranking resultante: CARO MOLINA 1.00 > SOYCARO MOLINA 0.99 > KARO MOLINA 0.98 > MOLINA CARO 0.97.
+2. **Los geográficos dependen de la clase.** PATAGONIA no pesa lo mismo en clase 25 (ropa) que en clase 39 (turismo). El peso geográfico 0.15 no se aplica por lista fija: el léxico admite una columna `clase` opcional, la consulta lleva la clase seleccionada al análisis, y el LLM recibe la clase y decide si el término es geográfico/descriptivo para ese rubro o arbitrario (peso alto). La caché del análisis se indexa por (consulta, clase).
+3. **LLM online activado.** Claude Haiku 4.5 en el backend, según la sección 5: solo para tokens que el léxico no conoce o cuando la clase cambia el rol, con caché persistente, timeout de 2 s, fallback determinista y tope diario.
 
 **Archivos de esta carpeta**
 
@@ -70,7 +70,7 @@ En una frase: **"Markip Chile" falla porque CHILE pesa igual que MARKIP y las co
 
 ## 2. La tesis del salto exponencial
 
-Un examinador de INAPI no compara dos cadenas: identifica el elemento dominante, descarta lo genérico, geográfico y societario, y coteja ese núcleo gráfica, fonética y conceptualmente, con la impresión de conjunto como corrección. El cambio de paradigma es hacer exactamente eso: la unidad de comparación pasa a ser el **token con peso de distintividad**, el score es una alineación token-a-token ponderada por ese peso más un término menor de conjunto, y un conjunto corto de **reglas doctrinales ordenadas** (idéntica > mismos elementos distintivos > suena igual > contiene íntegro el núcleo > núcleo suena igual > dominante idéntico; techo para quien solo comparte acompañamiento) fija pisos y techos. La segunda mitad del salto es el recall: lo que no entra al pool no se puede rankear, así que se recupera **por cada token del núcleo** (índice TEXT existente, clave fonética del token, embedding del núcleo solo) y no por la frase entera. Es un cambio de clase porque cambia la representación, no los coeficientes: con los 32 candidatos del harness el prototipo mueve CHILE de 0.77 a 0.48, MARKIT de 0.64 a 0.78 y MOLINA CARO de 0.63 a 0.98.
+Un examinador de INAPI no compara dos cadenas: identifica el elemento dominante, descarta lo genérico, geográfico y societario, y coteja ese núcleo gráfica, fonética y conceptualmente, con la impresión de conjunto como corrección. El cambio de paradigma es hacer exactamente eso: la unidad de comparación pasa a ser el **token con peso de distintividad**, el score es una alineación token-a-token ponderada por ese peso más un término menor de conjunto, y un conjunto corto de **reglas doctrinales ordenadas** (idéntica > contiene íntegra la consulta > suena igual > mismos elementos distintivos > contiene íntegro el núcleo > núcleo suena igual > dominante idéntico; techo para quien solo comparte acompañamiento) fija pisos y techos. La segunda mitad del salto es el recall: lo que no entra al pool no se puede rankear, así que se recupera **por cada token del núcleo** (índice TEXT existente, clave fonética del token, embedding del núcleo solo) y no por la frase entera. Es un cambio de clase porque cambia la representación, no los coeficientes: con los 32 candidatos del harness el prototipo mueve CHILE de 0.77 a 0.48, MARKIT de 0.64 a 0.78 y MOLINA CARO de 0.63 a 0.98.
 
 El peso de cada token lo decide, en este orden, un **léxico curado** (`lexicon.csv`: rol → peso máximo, editable por el cofundador), un léxico clasificado **una sola vez por Haiku en batch** para los ~3.000 tokens más frecuentes del corpus, y el IDF solo como desempate entre palabras reales. El LLM online decide únicamente el **rol** de tokens que el léxico no conoce (typos de genéricos, descriptivos raros, genericidad por clase, compuestos como SOYCARO); nunca ve candidatos, nunca puntúa, nunca etiqueta. Corre en paralelo con el recall, con single-flight, caché persistente y timeout; si no llega, la heurística responde y el resultado queda cacheado para la próxima vez. El núcleo es determinista y auditable: cada resultado sale con su regla y sus pesos, y un abogado puede discutir un peso del CSV, no un coseno.
 
@@ -179,7 +179,7 @@ def alinear(qt, ct):                                 # asignación 1:1 voraz por
 
 # --- 3. score por candidato ---
 W_Q, W_C, W_TOK, W_CONJ, W_SEM = 0.65, 0.35, 0.70, 0.20, 0.10
-PISO = {"mismo_nucleo": .95, "fonetica_identica": .96, "contiene_nucleo": .88, "nucleo_fonetico": .90, "dominante_identico": .85}  # fonetica_identica era .93; ver Anexo B [C8]
+PISO = {"contiene_consulta": .97, "fonetica_identica": .95, "mismo_nucleo": .94, "contiene_nucleo": .88, "nucleo_fonetico": .90, "dominante_identico": .85}  # ver Anexo B [C8] y decisión 1 [D1]
 TECHO_ACOMP, TECHO_DEBIL, TH_ALTO, TH_MEDIO = 0.50, 0.70, 0.75, 0.55
 
 def score(q, cand_norm, sem, vigente, translation=None):
@@ -196,7 +196,9 @@ def score(q, cand_norm, sem, vigente, translation=None):
     s_conj = 0.5 * lex_conj + 0.5 * phon_conj                                   # impresión de conjunto
     base = W_TOK * s_tok + W_CONJ * s_conj + W_SEM * sem
     nq, nc = "".join(q.nucleo), "".join(c.nucleo); regla, piso = "", 0.0
-    if sorted(q.nucleo) == sorted(c.nucleo):            regla, piso = "mismo_nucleo", PISO["mismo_nucleo"]         # MOLINA CARO, MARKIP SPA
+    if (len(qc) >= 5 and qc in cc and qc != cc
+          and (len(qt) >= 2 or len(qc) / len(cc) >= 0.6)):   regla, piso = "contiene_consulta", PISO["contiene_consulta"]  # [D1] SOYCARO MOLINA
+    elif sorted(q.nucleo) == sorted(c.nucleo):          regla, piso = "mismo_nucleo", PISO["mismo_nucleo"]         # MOLINA CARO, MARKIP SPA
     elif pk(qc) == pk(cc):                                regla, piso = "fonetica_identica", PISO["fonetica_identica"]  # KARO MOLINA, COCACOLA
     elif (len(nq) >= 5 and nq in cc and nq not in ct
           and (len(q.nucleo) >= 2 or len(nq) / len(cc) >= 0.6)):
@@ -217,6 +219,7 @@ def score(q, cand_norm, sem, vigente, translation=None):
 
 def label(s): return "Alto" if s >= TH_ALTO else "Medio" if s >= TH_MEDIO else "Bajo"
 EXPLAIN = {"identica": "Denominación idéntica.",
+           "contiene_consulta": "Contiene íntegra tu marca, con algo agregado.",
            "mismo_nucleo": "Mismos elementos distintivos ({nucleo}) en otro orden o con acompañamiento distinto.",
            "fonetica_identica": "Se pronuncia igual que tu marca.",
            "contiene_nucleo": "Contiene íntegro tu elemento distintivo '{nucleo}'.",
@@ -309,10 +312,10 @@ Respuesta: se agrega `analisis` (`tokens[{token,peso,rol}]`, `nucleo`, `dominant
 ## 8. Riesgos y decisiones abiertas para el fundador
 
 1. **El índice TEXT puede estar roto y recrearlo cuesta RAM.** Recomendación: hacerlo en Fase 0, en horario valle, con el rollback listo; si no cabe, plan B sin `MatchText`: vocabulario en RAM + `phonetic_key` por token + embedding del núcleo (menos recall, cero riesgo).
-2. **¿SOYCARO MOLINA (0.95) por encima de MOLINA CARO (0.98) y KARO MOLINA (0.96)?** La doctrina pone mismos elementos y sonido idéntico al menos a la par de la contención; recomiendo mantener el orden y mostrar las tres como Alto ≥95%. Si prefieres contención primero, es un parámetro (`PISO["contiene_nucleo"]` 0.88 → 0.96).
-3. **Geográficos que son marca (PATAGONIA, LOS ANDES).** Con peso 0.15 caen a Medio (PATAGONIA 0.65 frente a 0.83 hoy). Recomendación: lista geográfica solo con términos chilenos y países, ciudades extranjeras como evocativo (0.60), y overrides por token en `lexicon.csv` (`PATAGONIA,distintivo,0.7,manual,marca notoria`): una línea por excepción.
+2. **¿SOYCARO MOLINA por encima de MOLINA CARO y KARO MOLINA?** DECIDIDO (sí): regla `contiene_consulta` con piso 0.97, por encima de `fonetica_identica` (0.95) y `mismo_nucleo` (0.94). Validado en el prototipo: SOYCARO MOLINA 0.99 > KARO MOLINA 0.98 > MOLINA CARO 0.97.
+3. **Geográficos que son marca (PATAGONIA, LOS ANDES).** DECIDIDO: depende de la clase. `lexicon.csv` admite una columna `clase` opcional (una fila por token y clase; sin clase = todas), el análisis de la consulta recibe la clase seleccionada, la caché se indexa por (consulta, clase) y el prompt del LLM ya pide juzgar el rol respecto de la clase. Sin clase seleccionada se usa el peso geográfico por defecto (0.15) y se muestra la advertencia de que el peso puede cambiar según el rubro.
 4. **Eliminar el bono de clase (+0.10).** Es un no-op de ranking que infla etiquetas con filtro; quitarlo baja ~10 puntos los % en búsquedas con clase. Recomendación: quitarlo en v2 y recalibrar umbrales con el golden set antes de cambiar el default.
-5. **¿LLM online sí o no?** Recomendación: sí, pero acotado (solo tokens desconocidos, single-flight, caché persistente, tope diario) y con ablación por categoría; el valor legal está en el léxico curado, que es lo que tú controlas.
+5. **¿LLM online sí o no?** DECIDIDO: sí, acotado como describe la sección 5 (solo tokens desconocidos o cuando la clase cambia el rol, single-flight, caché persistente, tope diario, fallback) y con ablación por categoría en el golden set.
 6. **La Fase 4 probablemente no hace falta.** Las variantes en RAM cubren MARKIT/MERKIP/MARQUIP; el único hueco conocido es un distintivo corto pegado a otra palabra ("Caro" → SOYCARO). Recomendación: no tocar el esquema de Qdrant hasta que el golden set muestre ese hueco con frecuencia.
 
 ---
@@ -329,8 +332,8 @@ Salida de `proto_scoring.py` para los dos ejemplos del fundador. ANTES = fórmul
    # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
 ----------------------------------------------------------------------------------------------------------------------
    1  1.00 Alto  MARKIP CHILE         ✔      |   1  1.00 Alto  MARKIP CHILE         ✔   identica
-   2  0.83 Alto  MARKIP               ✔      |   2  0.98 Alto  MARKIP               ✔   mismo_nucleo
-   3  0.82 Alto  MARCA CHILE          ✘      |   3  0.98 Alto  MARKIP SPA           ✔   mismo_nucleo
+   2  0.83 Alto  MARKIP               ✔      |   2  0.97 Alto  MARKIP               ✔   mismo_nucleo
+   3  0.82 Alto  MARCA CHILE          ✘      |   3  0.97 Alto  MARKIP SPA           ✔   mismo_nucleo
    4  0.80 Alto  MARKI                ✘      |   4  0.96 Alto  MARKIPP              ✔   contiene_nucleo
    5  0.77 Alto  CHILE                ✘      |   5  0.93 Alto  MARQUIP              ✔   nucleo_fonetico
    6  0.74 Medio MARK IP LAW          ✘      |   6  0.90 Alto  MARK IP LAW          ✔   contiene_nucleo
@@ -350,16 +353,16 @@ Salida de `proto_scoring.py` para los dos ejemplos del fundador. ANTES = fórmul
 ======================================================================================================================
 
   Consulta 'Caro Molina'   pesos={'CARO': 0.529, 'MOLINA': 0.5}  núcleo=['CARO', 'MOLINA']  dominante=CARO  débil=False
-  Esperado: {CARO MOLINA, KARO MOLINA}  >  {SOYCARO MOLINA, CARO Y MOLINA, MOLINA CARO}  >  {CARO MOLINO}  >  {CARLA MOLINA, CAROLINA}  >  {MOLINA, MOLINA SPA, VIÑA MOLINA, MOLINARI, CARO, LA CARO, CAROLA}  >  {CARO QUINTANA}
+  Esperado: {CARO MOLINA}  >  {SOYCARO MOLINA}  >  {KARO MOLINA}  >  {CARO Y MOLINA, MOLINA CARO}  >  {CARO MOLINO}  >  {CARLA MOLINA, CAROLINA}  >  {MOLINA, MOLINA SPA, VIÑA MOLINA, MOLINARI, CARO, LA CARO, CAROLA}  >  {CARO QUINTANA}
   Nota: Dos apellidos de peso parecido: mismo par (en cualquier orden o con SOY/Y) > un apellido cambiado por otro parecido > un solo apellido en común.
 ----------------------------------------------------------------------------------------------------------------------
    # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
 ----------------------------------------------------------------------------------------------------------------------
    1  1.00 Alto  CARO MOLINA          ✔      |   1  1.00 Alto  CARO MOLINA          ✔   identica
-   2  0.98 Alto  KARO MOLINA          ✔      |   2  0.99 Alto  KARO MOLINA          ✔   fonetica_identica
-   3  0.97 Alto  CARO Y MOLINA        ✔      |   3  0.98 Alto  MOLINA CARO          ✔   mismo_nucleo
-   4  0.94 Alto  CARO MOLINO          ✘      |   4  0.98 Alto  CARO Y MOLINA        ✔   mismo_nucleo
-   5  0.92 Alto  SOYCARO MOLINA       ✘      |   5  0.95 Alto  SOYCARO MOLINA       ✔   contiene_nucleo
+   2  0.98 Alto  KARO MOLINA          ✘      |   2  0.99 Alto  SOYCARO MOLINA       ✔   contiene_consulta
+   3  0.97 Alto  CARO Y MOLINA        ✘      |   3  0.98 Alto  KARO MOLINA          ✔   fonetica_identica
+   4  0.94 Alto  CARO MOLINO          ✘      |   4  0.97 Alto  MOLINA CARO          ✔   mismo_nucleo
+   5  0.92 Alto  SOYCARO MOLINA       ✘      |   5  0.97 Alto  CARO Y MOLINA        ✔   mismo_nucleo
    6  0.91 Alto  CARLA MOLINA         ✘      |   6  0.92 Alto  CARO MOLINO          ✔   
    7  0.91 Alto  CAROLINA             ✘      |   7  0.81 Alto  CARLA MOLINA         ✔   
    8  0.83 Alto  MOLINA               ✘      |   8  0.77 Alto  CAROLINA             ✔   
@@ -372,7 +375,7 @@ Salida de `proto_scoring.py` para los dos ejemplos del fundador. ANTES = fórmul
   15  0.63 Medio MOLINA CARO          ✘      |  15  0.61 Medio VIÑA MOLINA          ✔   
   16  0.55 Bajo  LA CARO              ✘      |  16  0.54 Bajo  CARO QUINTANA        ✔   
 ----------------------------------------------------------------------------------------------------------------------
-  filas en el orden esperado: ANTES 3/16   DESPUÉS 16/16
+  filas en el orden esperado: ANTES 1/16   DESPUÉS 16/16
 
 ======================================================================================================================
 
@@ -383,7 +386,7 @@ Salida de `proto_scoring.py` para los dos ejemplos del fundador. ANTES = fórmul
   Markip Chile: BANCO CHILE, VIÑA CHILE y CHILE no son Alto                  ✘          ✔
   Markip Chile: MARKIP ≥ MARKIPP ≥ MARQUIP ≥ 0.90                            ✘          ✔
   Caro Molina: SOYCARO MOLINA en el top-5 y > CARLA MOLINA                   ✔          ✔
-  Caro Molina: SOYCARO MOLINA es la 1ª entre las que no tienen exactamente las mismas 2 palabras ni suenan igual     ✘          ✔
+  Caro Molina: SOYCARO MOLINA es 2ª: solo debajo de la idéntica, sobre KARO MOLINA y MOLINA CARO [D1]     ✘          ✔
   Caro Molina: MOLINA CARO ≥ 0.95                                            ✘          ✔
   Caro Molina: MOLINA solo < 0.75 (no es Alto)                               ✘          ✔
   Caro Molina: CAROLINA no es Alto por encima de CARLA MOLINA                ✔          ✔
@@ -395,10 +398,10 @@ Salida de `proto_scoring.py` para los dos ejemplos del fundador. ANTES = fórmul
   Banco de Chile: BANCO CHILE es Alto                                        ✔          ✔
   Entel: ENTEL PCS es Alto ≥ 0.95                                            ✘          ✔
 ----------------------------------------------------------------------------------------------------------------------
-  TOTAL filas en orden esperado: ANTES 29/65   DESPUÉS 65/65
+  TOTAL filas en orden esperado: ANTES 27/65   DESPUÉS 65/65
   Afirmaciones que pasan a cumplirse: 12   que dejan de cumplirse: 0
 
-  Filas que MEJORAN (✘→✔): Markip Chile → CHILE; Markip Chile → BANCO CHILE; Markip Chile → MARCA CHILE; Markip Chile → MARKIT; Markip Chile → MARKUP; Markip Chile → MARK IP LAW; Markip Chile → MERKIP; Markip Chile → MARKI; Markip Chile → MARKIP SPA; Markip Chile → VIÑA CHILE; Markip Chile → MARQUIP; Markip Chile → MARKIPP; Caro Molina → SOYCARO MOLINA; Caro Molina → MOLINA; Caro Molina → CARO; Caro Molina → CAROLINA; Caro Molina → CARO MOLINO; Caro Molina → MOLINA CARO; Caro Molina → CARLA MOLINA; Caro Molina → CAROLA; Caro Molina → VIÑA MOLINA; Caro Molina → MOLINARI; Caro Molina → LA CARO; Caro Molina → CARO QUINTANA; Caro Molina → MOLINA SPA; Skyline → SKYLINE TOWER; Skyline → SKY LION; Coca Cola → KOKA KOLLA HERBAL; Coca Cola → COLA; Coca Cola → INCA KOLA; Sol → SOL DE CHILE; Sol → SOLAR; Sol → SOLL; Entel → ENTEL PCS; Entel → ENTER; Entel → INTEL
+  Filas que MEJORAN (✘→✔): Markip Chile → CHILE; Markip Chile → BANCO CHILE; Markip Chile → MARCA CHILE; Markip Chile → MARKIT; Markip Chile → MARKUP; Markip Chile → MARK IP LAW; Markip Chile → MERKIP; Markip Chile → MARKI; Markip Chile → MARKIP SPA; Markip Chile → VIÑA CHILE; Markip Chile → MARQUIP; Markip Chile → MARKIPP; Caro Molina → SOYCARO MOLINA; Caro Molina → MOLINA; Caro Molina → CARO; Caro Molina → CAROLINA; Caro Molina → CARO MOLINO; Caro Molina → KARO MOLINA; Caro Molina → MOLINA CARO; Caro Molina → CARLA MOLINA; Caro Molina → CAROLA; Caro Molina → VIÑA MOLINA; Caro Molina → MOLINARI; Caro Molina → CARO Y MOLINA; Caro Molina → LA CARO; Caro Molina → CARO QUINTANA; Caro Molina → MOLINA SPA; Skyline → SKYLINE TOWER; Skyline → SKY LION; Coca Cola → KOKA KOLLA HERBAL; Coca Cola → COLA; Coca Cola → INCA KOLA; Sol → SOL DE CHILE; Sol → SOLAR; Sol → SOLL; Entel → ENTEL PCS; Entel → ENTER; Entel → INTEL
   Filas que EMPEORAN (✔→✘): ninguna
 
 CORRECCIONES A LA SPEC (§4) aplicadas en score_v2:
@@ -433,6 +436,8 @@ CORRECCIONES A LA SPEC (§4) aplicadas en score_v2:
 Advertencia: el "ranking esperado" lo definió el prototipo con el criterio legal de la propuesta (elemento dominante); 65/65 mide coherencia con esos niveles, no con INAPI. El golden set de la sección 7 es lo que lo valida.
 
 ## Anexo B. Correcciones a la especificación surgidas del prototipo
+
+- [D1] Decisión del fundador: nueva regla `contiene_consulta` (la consulta completa, compactada y de ≥5 letras, aparece dentro del candidato; con consulta de una palabra solo si cubre ≥60 % del candidato) con piso 0.97, por encima de `fonetica_identica` (0.95) y `mismo_nucleo` (0.94). Efecto colateral: SKYLINER y ENTEL PCS suben a 0.99 por contener la consulta.
 
 Al implementar la sección 4 y correr los 65 pares, hubo que ajustar la especificación en estos puntos. El prototipo ya los incorpora; la implementación en `markip-api` debe partir del prototipo, no del pseudocódigo.
 

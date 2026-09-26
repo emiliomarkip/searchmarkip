@@ -161,8 +161,9 @@ def alinear(qt, ct):
 # 3. Score por candidato: alineación ponderada + conjunto + reglas doctrinales
 # ----------------------------------------------------------------------------
 W_Q, W_C, W_TOK, W_CONJ, W_SEM = 0.65, 0.35, 0.70, 0.20, 0.10
-PISO = {"fonetica_identica": 0.96,   # [C8] suena idéntico (y casi se escribe igual): por encima del mismo núcleo reordenado
-        "mismo_nucleo": 0.95, "contiene_nucleo": 0.88, "nucleo_fonetico": 0.90, "dominante_identico": 0.85}
+PISO = {"contiene_consulta": 0.97,   # [D1] decisión del fundador: contener la consulta completa va por encima de sonar igual o reordenar
+        "fonetica_identica": 0.95,   # [C8] suena idéntico (y casi se escribe igual): por encima del mismo núcleo reordenado
+        "mismo_nucleo": 0.94, "contiene_nucleo": 0.88, "nucleo_fonetico": 0.90, "dominante_identico": 0.85}
 DESC_FRAGMENTADO = 0.04          # [C2] núcleo de 1 token contenido pero partido en 2+ tokens del candidato (MARK IP LAW)
 FACTOR_CONJ_FUSION = 0.85        # [C3] si un lado es una sola palabra, manda la impresión de conjunto (CAROLINA)
 TECHO_ACOMP, TECHO_DEBIL, TECHO_NO_IDENTICA = 0.50, 0.70, 0.99
@@ -210,7 +211,10 @@ def score_v2(consulta, nombre_candidato, ctx=None):
     # --- reglas doctrinales, en orden de fuerza; la primera que aplica fija el piso ---
     nq, nc = "".join(q.nucleo), "".join(c.nucleo)
     regla, piso = "", 0.0
-    if sorted(q.nucleo) == sorted(c.nucleo):
+    if (len(qc) >= 5 and qc in cc and qc != cc
+            and (len(qt) >= 2 or len(qc) / len(cc) >= 0.6)):
+        regla, piso = "contiene_consulta", PISO["contiene_consulta"]          # [D1] SOYCARO MOLINA, SKYLINER
+    elif sorted(q.nucleo) == sorted(c.nucleo):
         regla, piso = "mismo_nucleo", PISO["mismo_nucleo"]                    # MOLINA CARO, CARO Y MOLINA, MARKIP SPA
     elif pk(qc) == pk(cc):
         regla, piso = "fonetica_identica", PISO["fonetica_identica"]          # KARO MOLINA, CUCA MONGA, SKY LINE
@@ -254,6 +258,7 @@ def explicar(q, c, regla, asg):
     dom, nuc = q.dominante, " ".join(q.nucleo)
     if regla == "mismo_nucleo": return f"Mismos elementos distintivos ({nuc}) en otro orden o con acompañamiento distinto."
     if regla == "fonetica_identica": return "Se pronuncia igual que tu marca."
+    if regla == "contiene_consulta": return "Contiene íntegra tu marca, con algo agregado."
     if regla == "contiene_nucleo": return f"Contiene íntegro tu elemento distintivo '{nuc}'."
     if regla == "nucleo_fonetico": return f"Su elemento distintivo suena igual que '{nuc}'."
     if regla == "dominante_identico": return f"Comparte tu elemento dominante '{dom}'; el resto difiere."
@@ -283,8 +288,10 @@ CASES = {
   "Caro Molina": {
       "cands": ["SOYCARO MOLINA","CARO MOLINA","MOLINA","CARO","CAROLINA","CARO MOLINO","KARO MOLINA","MOLINA CARO",
                 "CARLA MOLINA","CAROLA","VIÑA MOLINA","MOLINARI","CARO Y MOLINA","LA CARO","CARO QUINTANA","MOLINA SPA"],
-      "tiers": [["CARO MOLINA", "KARO MOLINA"],
-                ["SOYCARO MOLINA", "CARO Y MOLINA", "MOLINA CARO"],
+      "tiers": [["CARO MOLINA"],
+                ["SOYCARO MOLINA"],                        # [D1] contiene la consulta completa: sobre KARO MOLINA y MOLINA CARO
+                ["KARO MOLINA"],
+                ["CARO Y MOLINA", "MOLINA CARO"],
                 ["CARO MOLINO"],
                 ["CARLA MOLINA", "CAROLINA"],
                 ["MOLINA", "MOLINA SPA", "VIÑA MOLINA", "MOLINARI", "CARO", "LA CARO", "CAROLA"],  # un solo elemento en común
@@ -335,9 +342,8 @@ CHECKS = [
      lambda S: S["MARKIP"]["score"] >= S["MARKIPP"]["score"] >= S["MARQUIP"]["score"] >= 0.90),
     ("Caro Molina", "SOYCARO MOLINA en el top-5 y > CARLA MOLINA",
      lambda S: S["SOYCARO MOLINA"]["rank"] <= 5 and S["SOYCARO MOLINA"]["score"] > S["CARLA MOLINA"]["score"]),
-    ("Caro Molina", "SOYCARO MOLINA es la 1ª entre las que no tienen exactamente las mismas 2 palabras ni suenan igual",
-     lambda S: S["SOYCARO MOLINA"]["score"] >= max(S[x]["score"] for x in S if x not in
-               ("CARO MOLINA", "KARO MOLINA", "MOLINA CARO", "CARO Y MOLINA", "SOYCARO MOLINA"))),
+    ("Caro Molina", "SOYCARO MOLINA es 2ª: solo debajo de la idéntica, sobre KARO MOLINA y MOLINA CARO [D1]",
+     lambda S: S["SOYCARO MOLINA"]["score"] > max(S[x]["score"] for x in S if x not in ("CARO MOLINA", "SOYCARO MOLINA"))),
     ("Caro Molina", "MOLINA CARO ≥ 0.95", lambda S: S["MOLINA CARO"]["score"] >= 0.95),
     ("Caro Molina", "MOLINA solo < 0.75 (no es Alto)", lambda S: S["MOLINA"]["score"] < 0.75),
     ("Caro Molina", "CAROLINA no es Alto por encima de CARLA MOLINA", lambda S: S["CAROLINA"]["score"] <= S["CARLA MOLINA"]["score"]),

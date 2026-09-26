@@ -7,8 +7,8 @@
    # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
 ----------------------------------------------------------------------------------------------------------------------
    1  1.00 Alto  MARKIP CHILE         ✔      |   1  1.00 Alto  MARKIP CHILE         ✔   identica
-   2  0.83 Alto  MARKIP               ✔      |   2  0.98 Alto  MARKIP               ✔   mismo_nucleo
-   3  0.82 Alto  MARCA CHILE          ✘      |   3  0.98 Alto  MARKIP SPA           ✔   mismo_nucleo
+   2  0.83 Alto  MARKIP               ✔      |   2  0.97 Alto  MARKIP               ✔   mismo_nucleo
+   3  0.82 Alto  MARCA CHILE          ✘      |   3  0.97 Alto  MARKIP SPA           ✔   mismo_nucleo
    4  0.80 Alto  MARKI                ✘      |   4  0.96 Alto  MARKIPP              ✔   contiene_nucleo
    5  0.77 Alto  CHILE                ✘      |   5  0.93 Alto  MARQUIP              ✔   nucleo_fonetico
    6  0.74 Medio MARK IP LAW          ✘      |   6  0.90 Alto  MARK IP LAW          ✔   contiene_nucleo
@@ -27,16 +27,16 @@
 
 ======================================================================================================================
   Consulta 'Caro Molina'   pesos={'CARO': 0.529, 'MOLINA': 0.5}  núcleo=['CARO', 'MOLINA']  dominante=CARO  débil=False
-  Esperado: {CARO MOLINA, KARO MOLINA}  >  {SOYCARO MOLINA, CARO Y MOLINA, MOLINA CARO}  >  {CARO MOLINO}  >  {CARLA MOLINA, CAROLINA}  >  {MOLINA, MOLINA SPA, VIÑA MOLINA, MOLINARI, CARO, LA CARO, CAROLA}  >  {CARO QUINTANA}
+  Esperado: {CARO MOLINA}  >  {SOYCARO MOLINA}  >  {KARO MOLINA}  >  {CARO Y MOLINA, MOLINA CARO}  >  {CARO MOLINO}  >  {CARLA MOLINA, CAROLINA}  >  {MOLINA, MOLINA SPA, VIÑA MOLINA, MOLINARI, CARO, LA CARO, CAROLA}  >  {CARO QUINTANA}
   Nota: Dos apellidos de peso parecido: mismo par (en cualquier orden o con SOY/Y) > un apellido cambiado por otro parecido > un solo apellido en común.
 ----------------------------------------------------------------------------------------------------------------------
    # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
 ----------------------------------------------------------------------------------------------------------------------
    1  1.00 Alto  CARO MOLINA          ✔      |   1  1.00 Alto  CARO MOLINA          ✔   identica
-   2  0.98 Alto  KARO MOLINA          ✔      |   2  0.99 Alto  KARO MOLINA          ✔   fonetica_identica
-   3  0.97 Alto  CARO Y MOLINA        ✔      |   3  0.98 Alto  MOLINA CARO          ✔   mismo_nucleo
-   4  0.94 Alto  CARO MOLINO          ✘      |   4  0.98 Alto  CARO Y MOLINA        ✔   mismo_nucleo
-   5  0.92 Alto  SOYCARO MOLINA       ✘      |   5  0.95 Alto  SOYCARO MOLINA       ✔   contiene_nucleo
+   2  0.98 Alto  KARO MOLINA          ✘      |   2  0.99 Alto  SOYCARO MOLINA       ✔   contiene_consulta
+   3  0.97 Alto  CARO Y MOLINA        ✘      |   3  0.98 Alto  KARO MOLINA          ✔   fonetica_identica
+   4  0.94 Alto  CARO MOLINO          ✘      |   4  0.97 Alto  MOLINA CARO          ✔   mismo_nucleo
+   5  0.92 Alto  SOYCARO MOLINA       ✘      |   5  0.97 Alto  CARO Y MOLINA        ✔   mismo_nucleo
    6  0.91 Alto  CARLA MOLINA         ✘      |   6  0.92 Alto  CARO MOLINO          ✔   
    7  0.91 Alto  CAROLINA             ✘      |   7  0.81 Alto  CARLA MOLINA         ✔   
    8  0.83 Alto  MOLINA               ✘      |   8  0.77 Alto  CAROLINA             ✔   
@@ -49,7 +49,7 @@
   15  0.63 Medio MOLINA CARO          ✘      |  15  0.61 Medio VIÑA MOLINA          ✔   
   16  0.55 Bajo  LA CARO              ✘      |  16  0.54 Bajo  CARO QUINTANA        ✔   
 ----------------------------------------------------------------------------------------------------------------------
-  filas en el orden esperado: ANTES 3/16   DESPUÉS 16/16
+  filas en el orden esperado: ANTES 1/16   DESPUÉS 16/16
 
 ======================================================================================================================
   Consulta 'Skyline'   pesos={'SKYLINE': 0.729}  núcleo=['SKYLINE']  dominante=SKYLINE  débil=False
@@ -59,9 +59,9 @@
    # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
 ----------------------------------------------------------------------------------------------------------------------
    1  1.00 Alto  SKYLINE              ✔      |   1  1.00 Alto  SKYLINE              ✔   identica
-   2  0.99 Alto  SKY LINE             ✔      |   2  0.98 Alto  SKY LINE             ✔   fonetica_identica
-   3  0.97 Alto  SKYLINER             ✔      |   3  0.98 Alto  SKYLINE TOWER        ✔   mismo_nucleo
-   4  0.88 Alto  SKY LION             ✘      |   4  0.96 Alto  SKYLINER             ✔   contiene_nucleo
+   2  0.99 Alto  SKY LINE             ✔      |   2  0.99 Alto  SKYLINER             ✔   contiene_consulta
+   3  0.97 Alto  SKYLINER             ✔      |   3  0.97 Alto  SKY LINE             ✔   fonetica_identica
+   4  0.88 Alto  SKY LION             ✘      |   4  0.97 Alto  SKYLINE TOWER        ✔   mismo_nucleo
    5  0.82 Alto  SKYLINE TOWER        ✘      |   5  0.74 Medio SKY LION             ✔   
    6  0.71 Medio ESKAILAIN            ✔      |   6  0.68 Medio ESKAILAIN            ✔   
 ----------------------------------------------------------------------------------------------------------------------
@@ -74,8 +74,8 @@
    # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
 ----------------------------------------------------------------------------------------------------------------------
    1  1.00 Alto  KUKAMONGA            ✔      |   1  1.00 Alto  KUKAMONGA            ✔   identica
-   2  0.87 Alto  CUCAMONGA            ✔      |   2  0.99 Alto  CUCAMONGA            ✔   fonetica_identica
-   3  0.85 Alto  CUCA MONGA           ✔      |   3  0.98 Alto  CUCA MONGA           ✔   fonetica_identica
+   2  0.87 Alto  CUCAMONGA            ✔      |   2  0.98 Alto  CUCAMONGA            ✔   fonetica_identica
+   3  0.85 Alto  CUCA MONGA           ✔      |   3  0.97 Alto  CUCA MONGA           ✔   fonetica_identica
    4  0.78 Alto  KUKA                 ✔      |   4  0.73 Medio KUKA                 ✔   
 ----------------------------------------------------------------------------------------------------------------------
   filas en el orden esperado: ANTES 4/4   DESPUÉS 4/4
@@ -88,7 +88,7 @@
    # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
 ----------------------------------------------------------------------------------------------------------------------
    1  0.97 Alto  COCA-COLA            ✔      |   1  1.00 Alto  COCA-COLA            ✔   identica
-   2  0.80 Alto  COCA                 ✔      |   2  0.98 Alto  COCA                 ✔   mismo_nucleo
+   2  0.80 Alto  COCA                 ✔      |   2  0.97 Alto  COCA                 ✔   mismo_nucleo
    3  0.80 Alto  COLA                 ✘      |   3  0.88 Alto  KOKA KOLLA HERBAL    ✔   dominante_identico
    4  0.73 Medio INCA KOLA            ✘      |   4  0.50 Bajo  COLA                 ✔   solo_acompanamiento
    5  0.61 Medio KOKA KOLLA HERBAL    ✘      |   5  0.41 Bajo  INCA KOLA            ✔   
@@ -103,9 +103,9 @@
    # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
 ----------------------------------------------------------------------------------------------------------------------
    1  1.00 Alto  SOL                  ✔      |   1  1.00 Alto  SOL                  ✔   identica
-   2  0.83 Alto  EL SOL               ✔      |   2  0.99 Alto  SOLL                 ✔   fonetica_identica
-   3  0.83 Alto  SOLAR                ✘      |   3  0.98 Alto  EL SOL               ✔   mismo_nucleo
-   4  0.80 Alto  SOLL                 ✘      |   4  0.98 Alto  SOL DE CHILE         ✔   mismo_nucleo
+   2  0.83 Alto  EL SOL               ✔      |   2  0.98 Alto  SOLL                 ✔   fonetica_identica
+   3  0.83 Alto  SOLAR                ✘      |   3  0.97 Alto  EL SOL               ✔   mismo_nucleo
+   4  0.80 Alto  SOLL                 ✘      |   4  0.97 Alto  SOL DE CHILE         ✔   mismo_nucleo
    5  0.74 Medio SOL DE CHILE         ✘      |   5  0.81 Alto  SOLAR                ✔   
    6  0.44 Bajo  SUN                  ✔      |   6  0.55 Medio SUN                  ✔   significado_equivalente
 ----------------------------------------------------------------------------------------------------------------------
@@ -119,7 +119,7 @@
    # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
 ----------------------------------------------------------------------------------------------------------------------
    1  1.00 Alto  BANCO DE CHILE       ✔      |   1  1.00 Alto  BANCO DE CHILE       ✔   identica
-   2  0.93 Alto  BANCO CHILE          ✔      |   2  0.98 Alto  BANCO CHILE          ✔   mismo_nucleo
+   2  0.93 Alto  BANCO CHILE          ✔      |   2  0.97 Alto  BANCO CHILE          ✔   mismo_nucleo
    3  0.78 Alto  BANCO                ✔      |   3  0.62 Medio BANCO                ✔   marca_debil
    4  0.75 Alto  CHILE                ✔      |   4  0.61 Medio CHILE                ✔   marca_debil
    5  0.58 Medio BANKO                ✔      |   5  0.59 Medio BANKO                ✔   marca_debil
@@ -135,7 +135,7 @@
    # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
 ----------------------------------------------------------------------------------------------------------------------
    1  1.00 Alto  ENTEL                ✔      |   1  1.00 Alto  ENTEL                ✔   identica
-   2  0.86 Alto  ENTER                ✘      |   2  0.98 Alto  ENTEL PCS            ✔   mismo_nucleo
+   2  0.86 Alto  ENTER                ✘      |   2  0.99 Alto  ENTEL PCS            ✔   contiene_consulta
    3  0.86 Alto  INTEL                ✘      |   3  0.85 Alto  ENTER                ✔   
    4  0.84 Alto  ENTEL PCS            ✘      |   4  0.85 Alto  INTEL                ✔   
    5  0.82 Alto  ENTELEQUIA           ✔      |   5  0.76 Alto  ENTELEQUIA           ✔   
@@ -150,7 +150,7 @@
   Markip Chile: BANCO CHILE, VIÑA CHILE y CHILE no son Alto                  ✘          ✔
   Markip Chile: MARKIP ≥ MARKIPP ≥ MARQUIP ≥ 0.90                            ✘          ✔
   Caro Molina: SOYCARO MOLINA en el top-5 y > CARLA MOLINA                   ✔          ✔
-  Caro Molina: SOYCARO MOLINA es la 1ª entre las que no tienen exactamente las mismas 2 palabras ni suenan igual     ✘          ✔
+  Caro Molina: SOYCARO MOLINA es 2ª: solo debajo de la idéntica, sobre KARO MOLINA y MOLINA CARO [D1]     ✘          ✔
   Caro Molina: MOLINA CARO ≥ 0.95                                            ✘          ✔
   Caro Molina: MOLINA solo < 0.75 (no es Alto)                               ✘          ✔
   Caro Molina: CAROLINA no es Alto por encima de CARLA MOLINA                ✔          ✔
@@ -162,10 +162,10 @@
   Banco de Chile: BANCO CHILE es Alto                                        ✔          ✔
   Entel: ENTEL PCS es Alto ≥ 0.95                                            ✘          ✔
 ----------------------------------------------------------------------------------------------------------------------
-  TOTAL filas en orden esperado: ANTES 29/65   DESPUÉS 65/65
+  TOTAL filas en orden esperado: ANTES 27/65   DESPUÉS 65/65
   Afirmaciones que pasan a cumplirse: 12   que dejan de cumplirse: 0
 
-  Filas que MEJORAN (✘→✔): Markip Chile → CHILE; Markip Chile → BANCO CHILE; Markip Chile → MARCA CHILE; Markip Chile → MARKIT; Markip Chile → MARKUP; Markip Chile → MARK IP LAW; Markip Chile → MERKIP; Markip Chile → MARKI; Markip Chile → MARKIP SPA; Markip Chile → VIÑA CHILE; Markip Chile → MARQUIP; Markip Chile → MARKIPP; Caro Molina → SOYCARO MOLINA; Caro Molina → MOLINA; Caro Molina → CARO; Caro Molina → CAROLINA; Caro Molina → CARO MOLINO; Caro Molina → MOLINA CARO; Caro Molina → CARLA MOLINA; Caro Molina → CAROLA; Caro Molina → VIÑA MOLINA; Caro Molina → MOLINARI; Caro Molina → LA CARO; Caro Molina → CARO QUINTANA; Caro Molina → MOLINA SPA; Skyline → SKYLINE TOWER; Skyline → SKY LION; Coca Cola → KOKA KOLLA HERBAL; Coca Cola → COLA; Coca Cola → INCA KOLA; Sol → SOL DE CHILE; Sol → SOLAR; Sol → SOLL; Entel → ENTEL PCS; Entel → ENTER; Entel → INTEL
+  Filas que MEJORAN (✘→✔): Markip Chile → CHILE; Markip Chile → BANCO CHILE; Markip Chile → MARCA CHILE; Markip Chile → MARKIT; Markip Chile → MARKUP; Markip Chile → MARK IP LAW; Markip Chile → MERKIP; Markip Chile → MARKI; Markip Chile → MARKIP SPA; Markip Chile → VIÑA CHILE; Markip Chile → MARQUIP; Markip Chile → MARKIPP; Caro Molina → SOYCARO MOLINA; Caro Molina → MOLINA; Caro Molina → CARO; Caro Molina → CAROLINA; Caro Molina → CARO MOLINO; Caro Molina → KARO MOLINA; Caro Molina → MOLINA CARO; Caro Molina → CARLA MOLINA; Caro Molina → CAROLA; Caro Molina → VIÑA MOLINA; Caro Molina → MOLINARI; Caro Molina → CARO Y MOLINA; Caro Molina → LA CARO; Caro Molina → CARO QUINTANA; Caro Molina → MOLINA SPA; Skyline → SKYLINE TOWER; Skyline → SKY LION; Coca Cola → KOKA KOLLA HERBAL; Coca Cola → COLA; Coca Cola → INCA KOLA; Sol → SOL DE CHILE; Sol → SOLAR; Sol → SOLL; Entel → ENTEL PCS; Entel → ENTER; Entel → INTEL
   Filas que EMPEORAN (✔→✘): ninguna
 
 CORRECCIONES A LA SPEC (§4) aplicadas en score_v2:
