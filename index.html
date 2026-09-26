@@ -204,6 +204,11 @@
   .tagchip{display:inline-flex; align-items:center; gap:6px; background:var(--nm); border-radius:11px; padding:6px 12px;
     font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; box-shadow:var(--raise-sm)}
   .tagchip.sol{color:var(--accent-d); font-weight:800}
+  .anal{display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:14px 18px; margin-bottom:14px;
+    border-radius:18px; background:var(--nm); box-shadow:var(--raise-sm)}
+  .anal-t{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-right:4px}
+  .anal .tagchip small{display:block; font-size:10px; font-weight:600; color:var(--muted); text-transform:none}
+  .anal-warn{flex-basis:100%; font-size:12.5px; font-weight:600; color:var(--hi)}
   .tagchip.na{color:var(--faint); box-shadow:var(--press-sm)}
   .niza b{display:inline-block; font-weight:800; font-size:11.5px; color:var(--accent-d);
     padding:0 3px; margin-left:2px; font-variant-numeric:tabular-nums}
@@ -471,6 +476,13 @@ let vigencia = "";                    // "" | "vig" | "novig"
 let dataSource = localStorage.getItem("mk_source") || "live";  // auto | live | demo
 let usingDemo = false;                // resuelto en runtime
 let lastQuery = "";
+/* Algoritmo del backend: ?algo=v2 en la URL lo activa y queda guardado; ?algo=v1 lo desactiva.
+   Vacío = el default del servidor (MARKIP_ALGO_DEFAULT). */
+const algoParam = new URLSearchParams(location.search).get("algo");
+if(algoParam) localStorage.setItem("mk_algo", algoParam);
+let algo = localStorage.getItem("mk_algo") || "";
+let lastAnalisis = null;              // analisis de la consulta que devuelve /search?algo=v2
+let lastAlgo = "";                    // meta.algo de la última respuesta
 
 /* ================================================================
    REGISTRO: leads + búsquedas → Google Sheet (Apps Script Web App)
@@ -528,7 +540,10 @@ function trackSearch(q, list){
     fuente: usingDemo ? "demo" : "api",
     n_resultados: list ? list.length : 0,
     top_marca: top ? (top.brand_name || "") : "",
-    top_score: top ? pct(top.score) : ""
+    top_score: top ? pct(top.score) : "",
+    algo: usingDemo ? "demo" : (lastAlgo || ""),
+    nucleo: lastAnalisis ? (lastAnalisis.nucleo || []).join(" ") : "",
+    top5: list ? list.slice(0,5).map(r=>`${r.brand_name}:${pct(r.score)}`).join(" | ") : ""
   });
 }
 
@@ -646,9 +661,12 @@ function demoSearch(q, niza){
 async function fetchLive(q, niza){
   const params = new URLSearchParams({q, limit:"60"});
   if(niza!=null) params.set("niza", String(niza));
+  if(algo) params.set("algo", algo);
   const res = await fetch(`${API}/search?${params}`, {signal: AbortSignal.timeout(75000)});
   if(!res.ok) throw new Error("HTTP "+res.status);
   const data = await res.json();
+  if(data.analisis) lastAnalisis = data.analisis;
+  lastAlgo = (data.meta && data.meta.algo) || "v1";
   return data.results || [];
 }
 
@@ -725,7 +743,16 @@ function render(list, q){
   if(vigencia==="novig") fdesc.push("solo no vigentes");
   $("#count").textContent=`${list.length} marcas parecidas a “${q}”${fdesc.length?` · ${fdesc.join(" · ")}`:""}`;
 
-  results.innerHTML=list.map((r,idx)=>{
+  const ROL_TXT={distintivo:"distintivo",evocativo:"evocativo",descriptivo:"descriptivo",generico:"genérico",
+    geografico:"geográfico",societario:"forma societaria",conector:"conector",acompanamiento:"acompañamiento",
+    apellido:"apellido",nombre:"nombre"};
+  const an = (!usingDemo && lastAnalisis && lastAnalisis.tokens && lastAnalisis.tokens.length) ? lastAnalisis : null;
+  const analHTML = an ? `<div class="anal">
+      <span class="anal-t">Cómo leímos tu marca</span>
+      ${an.tokens.map(t=>`<span class="tagchip ${t.peso>=0.3?"sol":"na"}" title="peso ${Math.round(t.peso*100)}%">${esc(t.token)}<small>${esc(ROL_TXT[t.rol]||(t.peso>=0.3?"distintivo":"sin peso"))}</small></span>`).join("")}
+      ${an.advertencia?`<div class="anal-warn">${esc(an.advertencia)}</div>`:""}
+    </div>` : "";
+  results.innerHTML=analHTML+list.map((r,idx)=>{
     const rc=riskClass(r.label,r.score), p=pct(r.score);
     const lvl=r.label||(p>=75?"Alto":p>=55?"Medio":"Bajo");
     const ap=applicant(r.applicants);
@@ -795,7 +822,8 @@ function render(list, q){
 
   results.querySelectorAll(".card-main").forEach(cm=>{
     const toggle=()=>{ const card=cm.closest(".card"); const open=card.classList.toggle("open");
-      cm.setAttribute("aria-expanded", open?"true":"false"); };
+      cm.setAttribute("aria-expanded", open?"true":"false");
+      if(open){ const r=list[+card.dataset.i]; if(r) track("expand", {detalle:`${+card.dataset.i+1}:${r.brand_name||""}:${pct(r.score)}%`}); } };
     cm.addEventListener("click",e=>{ if(e.target.closest("a")) return; toggle(); });
     cm.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggle(); } });
   });

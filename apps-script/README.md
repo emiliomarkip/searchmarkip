@@ -6,7 +6,14 @@ El buscador guarda en una planilla de Google:
 - **Busquedas** — cada búsqueda: consulta, clases de Niza, filtro de vigencia,
   si respondió la API o el modo demo, cuántos resultados hubo y la coincidencia más alta.
   Si el visitante ya dejó sus datos, la fila queda asociada a su correo.
-- **Eventos** — otros eventos (por ejemplo, cuando alguien cierra el formulario sin dejar datos).
+  Desde el algoritmo v2 se agregan **Algoritmo** (v1/v2/demo), **Núcleo** (las palabras
+  distintivas que detectó el buscador) y **Top 5** (marca:% de los cinco primeros), para
+  comparar versiones y armar el golden set.
+- **Eventos** — otros eventos: cierre del formulario sin dejar datos y `expand`
+  (el visitante abrió una tarjeta; **Detalle** = puesto:marca:%).
+
+Las columnas nuevas se agregan solas al final de la hoja en el primer registro; vuelve a
+pegar `Codigo.gs` e implementa una nueva versión del Web App para activarlas.
 
 Planilla: **Markip Buscador — Leads y Búsquedas**
 <https://docs.google.com/spreadsheets/d/146IMXHXVWPA2EHgF6nanorNG__7R_eiCseZdHnem4mk/edit>
