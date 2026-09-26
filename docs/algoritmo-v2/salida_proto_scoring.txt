@@ -1,0 +1,198 @@
+
+======================================================================================================================
+  Consulta 'Markip Chile'   pesos={'MARKIP': 1.0, 'CHILE': 0.15}  núcleo=['MARKIP']  dominante=MARKIP  débil=False
+  Esperado: {MARKIP CHILE}  >  {MARKIP, MARKIP SPA, MARKIPP, MARQUIP}  >  {MARKIT, MARKUP, MERKIP, MARKI, MARK IP LAW}  >  {CHILEMARK, BANCO CHILE, VIÑA CHILE, CHILE, CHILE TABACOS, MARCA CHILE}
+  Nota: MARKIP SPA ≈ MARKIP (SpA es forma societaria); MARK IP LAW contiene el núcleo partido y suena igual: por encima de lo que solo comparte CHILE, por debajo de las variantes limpias de MARKIP.
+----------------------------------------------------------------------------------------------------------------------
+   # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
+----------------------------------------------------------------------------------------------------------------------
+   1  1.00 Alto  MARKIP CHILE         ✔      |   1  1.00 Alto  MARKIP CHILE         ✔   identica
+   2  0.83 Alto  MARKIP               ✔      |   2  0.98 Alto  MARKIP               ✔   mismo_nucleo
+   3  0.82 Alto  MARCA CHILE          ✘      |   3  0.98 Alto  MARKIP SPA           ✔   mismo_nucleo
+   4  0.80 Alto  MARKI                ✘      |   4  0.96 Alto  MARKIPP              ✔   contiene_nucleo
+   5  0.77 Alto  CHILE                ✘      |   5  0.93 Alto  MARQUIP              ✔   nucleo_fonetico
+   6  0.74 Medio MARK IP LAW          ✘      |   6  0.90 Alto  MARK IP LAW          ✔   contiene_nucleo
+   7  0.72 Medio MARKIPP              ✘      |   7  0.81 Alto  MARKI                ✔   
+   8  0.68 Medio MARKIP SPA           ✘      |   8  0.78 Alto  MARKIT               ✔   
+   9  0.67 Medio MARQUIP              ✘      |   9  0.78 Alto  MARKUP               ✔   
+  10  0.66 Medio BANCO CHILE          ✘      |  10  0.78 Alto  MERKIP               ✔   
+  11  0.65 Medio VIÑA CHILE           ✘      |  11  0.50 Bajo  MARCA CHILE          ✔   solo_acompanamiento
+  12  0.64 Medio MARKIT               ✘      |  12  0.50 Bajo  CHILE                ✔   solo_acompanamiento
+  13  0.64 Medio MARKUP               ✘      |  13  0.43 Bajo  CHILEMARK            ✔   
+  14  0.64 Medio MERKIP               ✘      |  14  0.36 Bajo  BANCO CHILE          ✔   solo_acompanamiento
+  15  0.54 Bajo  CHILEMARK            ✔      |  15  0.36 Bajo  VIÑA CHILE           ✔   solo_acompanamiento
+  16  0.48 Bajo  CHILE TABACOS        ✔      |  16  0.32 Bajo  CHILE TABACOS        ✔   solo_acompanamiento
+----------------------------------------------------------------------------------------------------------------------
+  filas en el orden esperado: ANTES 4/16   DESPUÉS 16/16
+
+======================================================================================================================
+  Consulta 'Caro Molina'   pesos={'CARO': 0.529, 'MOLINA': 0.5}  núcleo=['CARO', 'MOLINA']  dominante=CARO  débil=False
+  Esperado: {CARO MOLINA, KARO MOLINA}  >  {SOYCARO MOLINA, CARO Y MOLINA, MOLINA CARO}  >  {CARO MOLINO}  >  {CARLA MOLINA, CAROLINA}  >  {MOLINA, MOLINA SPA, VIÑA MOLINA, MOLINARI, CARO, LA CARO, CAROLA}  >  {CARO QUINTANA}
+  Nota: Dos apellidos de peso parecido: mismo par (en cualquier orden o con SOY/Y) > un apellido cambiado por otro parecido > un solo apellido en común.
+----------------------------------------------------------------------------------------------------------------------
+   # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
+----------------------------------------------------------------------------------------------------------------------
+   1  1.00 Alto  CARO MOLINA          ✔      |   1  1.00 Alto  CARO MOLINA          ✔   identica
+   2  0.98 Alto  KARO MOLINA          ✔      |   2  0.99 Alto  KARO MOLINA          ✔   fonetica_identica
+   3  0.97 Alto  CARO Y MOLINA        ✔      |   3  0.98 Alto  MOLINA CARO          ✔   mismo_nucleo
+   4  0.94 Alto  CARO MOLINO          ✘      |   4  0.98 Alto  CARO Y MOLINA        ✔   mismo_nucleo
+   5  0.92 Alto  SOYCARO MOLINA       ✘      |   5  0.95 Alto  SOYCARO MOLINA       ✔   contiene_nucleo
+   6  0.91 Alto  CARLA MOLINA         ✘      |   6  0.92 Alto  CARO MOLINO          ✔   
+   7  0.91 Alto  CAROLINA             ✘      |   7  0.81 Alto  CARLA MOLINA         ✔   
+   8  0.83 Alto  MOLINA               ✘      |   8  0.77 Alto  CAROLINA             ✔   
+   9  0.77 Alto  CARO                 ✘      |   9  0.68 Medio MOLINA               ✔   
+  10  0.75 Alto  CAROLA               ✘      |  10  0.66 Medio CAROLA               ✔   
+  11  0.74 Medio VIÑA MOLINA          ✘      |  11  0.65 Medio CARO                 ✔   
+  12  0.70 Medio CARO QUINTANA        ✘      |  12  0.64 Medio MOLINA SPA           ✔   
+  13  0.69 Medio MOLINARI             ✘      |  13  0.64 Medio MOLINARI             ✔   
+  14  0.65 Medio MOLINA SPA           ✘      |  14  0.62 Medio LA CARO              ✔   
+  15  0.63 Medio MOLINA CARO          ✘      |  15  0.61 Medio VIÑA MOLINA          ✔   
+  16  0.55 Bajo  LA CARO              ✘      |  16  0.54 Bajo  CARO QUINTANA        ✔   
+----------------------------------------------------------------------------------------------------------------------
+  filas en el orden esperado: ANTES 3/16   DESPUÉS 16/16
+
+======================================================================================================================
+  Consulta 'Skyline'   pesos={'SKYLINE': 0.729}  núcleo=['SKYLINE']  dominante=SKYLINE  débil=False
+  Esperado: {SKYLINE}  >  {SKY LINE, SKYLINE TOWER, SKYLINER}  >  {SKY LION, ESKAILAIN}
+  Nota: ESKAILAIN es la pronunciación inglesa escrita; la clave fonética es española, así que solo cabe Medio.
+----------------------------------------------------------------------------------------------------------------------
+   # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
+----------------------------------------------------------------------------------------------------------------------
+   1  1.00 Alto  SKYLINE              ✔      |   1  1.00 Alto  SKYLINE              ✔   identica
+   2  0.99 Alto  SKY LINE             ✔      |   2  0.98 Alto  SKY LINE             ✔   fonetica_identica
+   3  0.97 Alto  SKYLINER             ✔      |   3  0.98 Alto  SKYLINE TOWER        ✔   mismo_nucleo
+   4  0.88 Alto  SKY LION             ✘      |   4  0.96 Alto  SKYLINER             ✔   contiene_nucleo
+   5  0.82 Alto  SKYLINE TOWER        ✘      |   5  0.74 Medio SKY LION             ✔   
+   6  0.71 Medio ESKAILAIN            ✔      |   6  0.68 Medio ESKAILAIN            ✔   
+----------------------------------------------------------------------------------------------------------------------
+  filas en el orden esperado: ANTES 4/6   DESPUÉS 6/6
+
+======================================================================================================================
+  Consulta 'Kukamonga'   pesos={'KUKAMONGA': 1.0}  núcleo=['KUKAMONGA']  dominante=KUKAMONGA  débil=False
+  Esperado: {KUKAMONGA}  >  {CUCAMONGA, CUCA MONGA}  >  {KUKA}
+----------------------------------------------------------------------------------------------------------------------
+   # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
+----------------------------------------------------------------------------------------------------------------------
+   1  1.00 Alto  KUKAMONGA            ✔      |   1  1.00 Alto  KUKAMONGA            ✔   identica
+   2  0.87 Alto  CUCAMONGA            ✔      |   2  0.99 Alto  CUCAMONGA            ✔   fonetica_identica
+   3  0.85 Alto  CUCA MONGA           ✔      |   3  0.98 Alto  CUCA MONGA           ✔   fonetica_identica
+   4  0.78 Alto  KUKA                 ✔      |   4  0.73 Medio KUKA                 ✔   
+----------------------------------------------------------------------------------------------------------------------
+  filas en el orden esperado: ANTES 4/4   DESPUÉS 4/4
+
+======================================================================================================================
+  Consulta 'Coca Cola'   pesos={'COCA': 0.631, 'COLA': 0.15}  núcleo=['COCA']  dominante=COCA  débil=False
+  Esperado: {COCA-COLA}  >  {KOKA KOLLA HERBAL, COCA}  >  {COLA, PEPSI COLA, INCA KOLA}
+  Nota: COLA es el nombre del tipo de bebida (genérico en clase 32): el dominante es COCA. PEPSI COLA e INCA KOLA coexisten en el registro.
+----------------------------------------------------------------------------------------------------------------------
+   # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
+----------------------------------------------------------------------------------------------------------------------
+   1  0.97 Alto  COCA-COLA            ✔      |   1  1.00 Alto  COCA-COLA            ✔   identica
+   2  0.80 Alto  COCA                 ✔      |   2  0.98 Alto  COCA                 ✔   mismo_nucleo
+   3  0.80 Alto  COLA                 ✘      |   3  0.88 Alto  KOKA KOLLA HERBAL    ✔   dominante_identico
+   4  0.73 Medio INCA KOLA            ✘      |   4  0.50 Bajo  COLA                 ✔   solo_acompanamiento
+   5  0.61 Medio KOKA KOLLA HERBAL    ✘      |   5  0.41 Bajo  INCA KOLA            ✔   
+   6  0.57 Medio PEPSI COLA           ✔      |   6  0.28 Bajo  PEPSI COLA           ✔   
+----------------------------------------------------------------------------------------------------------------------
+  filas en el orden esperado: ANTES 3/6   DESPUÉS 6/6
+
+======================================================================================================================
+  Consulta 'Sol'   pesos={'SOL': 0.5}  núcleo=['SOL']  dominante=SOL  débil=False
+  Esperado: {SOL}  >  {EL SOL, SOL DE CHILE, SOLL}  >  {SOLAR}  >  {SUN}
+----------------------------------------------------------------------------------------------------------------------
+   # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
+----------------------------------------------------------------------------------------------------------------------
+   1  1.00 Alto  SOL                  ✔      |   1  1.00 Alto  SOL                  ✔   identica
+   2  0.83 Alto  EL SOL               ✔      |   2  0.99 Alto  SOLL                 ✔   fonetica_identica
+   3  0.83 Alto  SOLAR                ✘      |   3  0.98 Alto  EL SOL               ✔   mismo_nucleo
+   4  0.80 Alto  SOLL                 ✘      |   4  0.98 Alto  SOL DE CHILE         ✔   mismo_nucleo
+   5  0.74 Medio SOL DE CHILE         ✘      |   5  0.81 Alto  SOLAR                ✔   
+   6  0.44 Bajo  SUN                  ✔      |   6  0.55 Medio SUN                  ✔   significado_equivalente
+----------------------------------------------------------------------------------------------------------------------
+  filas en el orden esperado: ANTES 3/6   DESPUÉS 6/6
+
+======================================================================================================================
+  Consulta 'Banco de Chile'   pesos={'BANCO': 0.15, 'DE': 0.05, 'CHILE': 0.15}  núcleo=['BANCO', 'CHILE']  dominante=BANCO  débil=True
+  Esperado: {BANCO DE CHILE}  >  {BANCO CHILE}  >  {BANCO, BANKO, BANCOESTADO, CHILE}
+  Nota: Marca débil (genérico + geográfico): solo la impresión de conjunto; entre los parciales no hay orden doctrinal claro.
+----------------------------------------------------------------------------------------------------------------------
+   # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
+----------------------------------------------------------------------------------------------------------------------
+   1  1.00 Alto  BANCO DE CHILE       ✔      |   1  1.00 Alto  BANCO DE CHILE       ✔   identica
+   2  0.93 Alto  BANCO CHILE          ✔      |   2  0.98 Alto  BANCO CHILE          ✔   mismo_nucleo
+   3  0.78 Alto  BANCO                ✔      |   3  0.62 Medio BANCO                ✔   marca_debil
+   4  0.75 Alto  CHILE                ✔      |   4  0.61 Medio CHILE                ✔   marca_debil
+   5  0.58 Medio BANKO                ✔      |   5  0.59 Medio BANKO                ✔   marca_debil
+   6  0.58 Medio BANCOESTADO          ✔      |   6  0.52 Bajo  BANCOESTADO          ✔   marca_debil
+----------------------------------------------------------------------------------------------------------------------
+  filas en el orden esperado: ANTES 6/6   DESPUÉS 6/6
+
+======================================================================================================================
+  Consulta 'Entel'   pesos={'ENTEL': 0.699}  núcleo=['ENTEL']  dominante=ENTEL  débil=False
+  Esperado: {ENTEL}  >  {ENTEL PCS}  >  {INTEL, ENTER}  >  {ENTELEQUIA}
+  Nota: INTEL y ENTER difieren en una letra; ENTELEQUIA contiene ENTEL pero es una palabra del diccionario con concepto propio.
+----------------------------------------------------------------------------------------------------------------------
+   # ANTES (main.py)                            |   # DESPUÉS (score_v2)                               regla
+----------------------------------------------------------------------------------------------------------------------
+   1  1.00 Alto  ENTEL                ✔      |   1  1.00 Alto  ENTEL                ✔   identica
+   2  0.86 Alto  ENTER                ✘      |   2  0.98 Alto  ENTEL PCS            ✔   mismo_nucleo
+   3  0.86 Alto  INTEL                ✘      |   3  0.85 Alto  ENTER                ✔   
+   4  0.84 Alto  ENTEL PCS            ✘      |   4  0.85 Alto  INTEL                ✔   
+   5  0.82 Alto  ENTELEQUIA           ✔      |   5  0.76 Alto  ENTELEQUIA           ✔   
+----------------------------------------------------------------------------------------------------------------------
+  filas en el orden esperado: ANTES 2/5   DESPUÉS 5/5
+
+======================================================================================================================
+  AFIRMACIONES (etiquetas y órdenes concretos)                          ANTES    DESPUÉS
+----------------------------------------------------------------------------------------------------------------------
+  Markip Chile: CHILE es Bajo                                                ✘          ✔
+  Markip Chile: MARKIT, MARKUP y MERKIP > BANCO CHILE y VIÑA CHILE           ✘          ✔
+  Markip Chile: BANCO CHILE, VIÑA CHILE y CHILE no son Alto                  ✘          ✔
+  Markip Chile: MARKIP ≥ MARKIPP ≥ MARQUIP ≥ 0.90                            ✘          ✔
+  Caro Molina: SOYCARO MOLINA en el top-5 y > CARLA MOLINA                   ✔          ✔
+  Caro Molina: SOYCARO MOLINA es la 1ª entre las que no tienen exactamente las mismas 2 palabras ni suenan igual     ✘          ✔
+  Caro Molina: MOLINA CARO ≥ 0.95                                            ✘          ✔
+  Caro Molina: MOLINA solo < 0.75 (no es Alto)                               ✘          ✔
+  Caro Molina: CAROLINA no es Alto por encima de CARLA MOLINA                ✔          ✔
+  Kukamonga: CUCAMONGA ≥ 0.93                                                ✘          ✔
+  Coca Cola: KOKA KOLLA HERBAL es Alto                                       ✘          ✔
+  Coca Cola: PEPSI COLA e INCA KOLA no son Alto                              ✔          ✔
+  Sol: SUN al menos Medio (traducción)                                       ✘          ✔
+  Sol: SOLL ≥ 0.93 (suena igual)                                             ✘          ✔
+  Banco de Chile: BANCO CHILE es Alto                                        ✔          ✔
+  Entel: ENTEL PCS es Alto ≥ 0.95                                            ✘          ✔
+----------------------------------------------------------------------------------------------------------------------
+  TOTAL filas en orden esperado: ANTES 29/65   DESPUÉS 65/65
+  Afirmaciones que pasan a cumplirse: 12   que dejan de cumplirse: 0
+
+  Filas que MEJORAN (✘→✔): Markip Chile → CHILE; Markip Chile → BANCO CHILE; Markip Chile → MARCA CHILE; Markip Chile → MARKIT; Markip Chile → MARKUP; Markip Chile → MARK IP LAW; Markip Chile → MERKIP; Markip Chile → MARKI; Markip Chile → MARKIP SPA; Markip Chile → VIÑA CHILE; Markip Chile → MARQUIP; Markip Chile → MARKIPP; Caro Molina → SOYCARO MOLINA; Caro Molina → MOLINA; Caro Molina → CARO; Caro Molina → CAROLINA; Caro Molina → CARO MOLINO; Caro Molina → MOLINA CARO; Caro Molina → CARLA MOLINA; Caro Molina → CAROLA; Caro Molina → VIÑA MOLINA; Caro Molina → MOLINARI; Caro Molina → LA CARO; Caro Molina → CARO QUINTANA; Caro Molina → MOLINA SPA; Skyline → SKYLINE TOWER; Skyline → SKY LION; Coca Cola → KOKA KOLLA HERBAL; Coca Cola → COLA; Coca Cola → INCA KOLA; Sol → SOL DE CHILE; Sol → SOLAR; Sol → SOLL; Entel → ENTEL PCS; Entel → ENTER; Entel → INTEL
+  Filas que EMPEORAN (✔→✘): ninguna
+
+CORRECCIONES A LA SPEC (§4) aplicadas en score_v2:
+ [C1] COLA se declara 'generico' (0.15) en el léxico. Con COLA como núcleo (df 400 -> 0.56) 'Coca Cola' vs
+      KOKA KOLLA HERBAL quedaba 0.74 Medio y COCA 0.75, porque la clave fonética hace KOLLA -> KOYA (LL=Y) y la regla
+      dominante_identico exige que todo lo demás sea < 0.30. Es la decisión que el léxico por clase / LLM tomaría.
+ [C2] contiene_nucleo: si el núcleo es 1 token y ningún token del candidato lo contiene entero (MARKIP partido en
+      MARK + IP), el piso baja 0.04: la impresión gráfica es distinta aunque suene igual. Sin esto MARK IP LAW (0.94)
+      superaba a MARQUIP (0.93), que suena idéntico y es una sola palabra.
+ [C3] Cuando uno de los dos lados es UNA sola palabra, s_tok = max(s_tok, 0.85·s_conj): la alineación 1:1 no ve
+      fusiones (CAROLINA ~ CARO+MOLINA, NUTRIVIDA ~ NUTRI VIDA). Sin esto CAROLINA (0.62) quedaba bajo MOLINA (0.67),
+      al revés de lo que dice la impresión de conjunto. No afecta a los techos (CHILE sigue en 0.50).
+ [C4] MARKI se considera del mismo nivel que MARKIT/MARKUP/MERKIP (una letra de diferencia, mismo inicio), y MARKIP SPA
+      del nivel de MARKIP (SpA es forma societaria): el ranking esperado del enunciado los ponía más abajo sin base doctrinal.
+ [C5] La spec no define qué hacer con la contención de un token corto (SOL en SOLAR, KUKA en KUKAMONGA): se mantiene
+      la regla de tsim (len >= 4) y contiene_nucleo (len >= 5), así que SOL vs SOLAR queda por la vía general (0.83).
+ [C6] score_v2 recibe (consulta, candidato, ctx) y cachea el Analisis de la consulta; el LLM online solo aportaría
+      ctx.roles_q/roles_c (rol por token), nunca puntajes. Sin LLM SOYCARO pesa 1.0 (df 0): igual funciona porque la
+      regla contiene_nucleo mira el compacto, no los tokens.
+ [C7] pk() para scoring: LL -> Y solo delante de vocal; LL final o ante consonante -> L. Con la clave de fonetica.py
+      SOLL daba "SOY" y no se detectaba que suena igual que SOL (0.75 Medio en vez de 0.99). La clave guardada en
+      Qdrant (recall por phonetic_key) no se toca; el token-level pk se calcula en el Space de todos modos.
+ [C8] PISO fonetica_identica sube de 0.93 a 0.96 (> mismo_nucleo 0.95): la spec (§8, decisión 2) ponía
+      MOLINA CARO (0.98) > KARO MOLINA (0.96); el ranking esperado de la tarea y la doctrina (identidad fonética
+      del conjunto con grafía casi idéntica = máxima similitud no idéntica) piden KARO MOLINA ≈ CARO MOLINA.
+      Efecto colateral deseable: SKY LINE / CUCA MONGA / SOLL quedan en 0.98-0.99, justo bajo la idéntica.
+ NOTA: el "ranking esperado" lo definí yo con el criterio legal del contexto; difiere del ejemplo del enunciado en
+      [C4] y agrupa en un solo nivel los parciales sin orden doctrinal claro (un apellido en común; BANCO/BANKO/CHILE
+      en marca débil; INTEL/ENTER). 65/65 mide coherencia con esos niveles, no con INAPI: hace falta el golden set (§7).
+
