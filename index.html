@@ -435,10 +435,9 @@
    - Vigencia: se filtra en el cliente (la API espera `estado` exacto,
      no `vigente`), sobre un limit amplio.
    - Registro: cada búsqueda y los leads van a un Google Sheet (ver TRACK_URL).
-   - Detalle expandible: muestra todo lo que entrega la API hoy y marca
-     los campos que YA existen en Qdrant pero que /search aún no expone
-     (application_number, registration_date, expiration_date, translation,
-     type_name, label_description).
+   - Detalle expandible: muestra todo lo que entrega /search (incluye
+     application_number, registration_date, expiration_date, translation,
+     type_name, label_description e image_url).
    ================================================================ */
 
 const API = "https://emiliomarkip44-markip-api.hf.space";
@@ -703,12 +702,11 @@ function applicant(a){ if(!a) return {c:"",n:"—"}; const m=String(a).match(/^\
 function lensBar(label, v){
   return `<div class="lens"><span class="lk">${label}<em>${(v||0).toFixed(2)}</em></span><i><b style="width:${pct(v)}%"></b></i></div>`;
 }
-/* campo del payload de Qdrant que /search aún no expone */
 function dv(val, fmt){
-  if(val===undefined) return `<span class="dv locked" title="Este dato existe en la base (Qdrant), pero /search de markip-api aún no lo expone.">no expuesto</span>`;
-  if(val===null || val==="") return `<span class="dv">—</span>`;
+  if(val===undefined || val===null || val==="") return `<span class="dv">—</span>`;
   return `<span class="dv">${esc(fmt?fmt(val):val)}</span>`;
 }
+const splitApplicants = a => a ? String(a).split(/,(?=\s*\()/).map(x=>x.trim()).filter(Boolean) : [];
 
 function render(list, q){
   const results=$("#results"), metaRow=$("#metaRow");
@@ -733,7 +731,7 @@ function render(list, q){
     const niza=(r.niza_classes||[]).map(n=>`<b title="${esc(NIZA[n]||"")}">${n}</b>`).join("");
     const sol = r.application_number!=null
       ? `<span class="tagchip sol" title="Número de solicitud INAPI">Sol. N° ${esc(r.application_number)}</span>`
-      : `<span class="tagchip na" title="El N° de solicitud existe en Qdrant; falta exponerlo en /search de markip-api.">Sol. N° pendiente API</span>`;
+      : "";
 
     return `<article class="card ${rc}" data-i="${idx}">
       <div class="card-main" role="button" tabindex="0" aria-expanded="false">
@@ -776,17 +774,14 @@ function render(list, q){
           </div>
           <div class="dgroup">
             <h4>Titular</h4>
-            <div class="drow"><span class="dk">Solicitante</span>${dv(r.applicants)}</div>
+            <div class="drow"><span class="dk">Solicitante</span>${dv(splitApplicants(r.applicants).join(" · "))}</div>
             <div class="drow"><span class="dk">Clases de Niza</span><span class="dv">${(r.niza_classes||[]).map(n=>`${n} (${esc(NIZA[n]||"")})`).join(" · ")||"—"}</span></div>
             <div class="drow"><span class="dk">Traducción</span>${dv(r.translation)}</div>
             <div class="drow"><span class="dk">Descripción etiqueta</span>${dv(r.label_description)}</div>
           </div>
         </div>
         <div class="dfoot">
-          <span class="locknote">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-            “no expuesto” = el dato ya está en Qdrant; solo falta agregarlo a la respuesta de /search.
-          </span>
+          ${r.image_url?`<a href="${esc(r.image_url)}" target="_blank" rel="noopener">Ver etiqueta →</a>`:"<span></span>"}
           <a href="https://ion.inapi.cl/Marca/BuscarMarca.aspx" target="_blank" rel="noopener">Verificar en INAPI →</a>
         </div>
       </div>
